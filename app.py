@@ -173,38 +173,31 @@ with st.sidebar:
     st.subheader("👨‍💻 Developer Tools")
     
     # Build curl command based on configuration
+    # Build curl command payload
+    curl_payload = {
+        "model": "solar-pro2-search",
+        "messages": [
+            {"role": "user", "content": "Your question here"}
+        ],
+        "stream": True
+    }
+
     if EXTERNAL_SEARCH_BASE_URL and EXTERNAL_SEARCH_COLLECTION_NAME and EXTERNAL_SEARCH_API_KEY:
-        curl_cmd = f"""curl --location '{SOLAR_SEARCH_URL}' \\
+        curl_payload["web_search_options"] = {
+            "search_context_size": "medium",
+            "external_search_engine_only": True,
+            "servers": [
+                {
+                    "url": f"{EXTERNAL_SEARCH_BASE_URL.rstrip('/')}/search/{EXTERNAL_SEARCH_COLLECTION_NAME}",
+                    "key": "YOUR_EXTERNAL_SEARCH_KEY"
+                }
+            ]
+        }
+
+    curl_cmd = f"""curl --location '{SOLAR_SEARCH_URL}' \\
   --header 'Authorization: Bearer YOUR_UPSTAGE_API_KEY' \\
   --header 'Content-Type: application/json' \\
-  --data '{{
-    "model": "solar-pro2-search",
-    "messages": [
-      {{"role": "user", "content": "Your question here"}}
-    ],
-    "web_search_options": {{
-      "search_context_size": "medium",
-      "external_search_engine_only": true,
-      "servers": [
-        {{
-          "url": "{EXTERNAL_SEARCH_BASE_URL.rstrip('/')}/search/{EXTERNAL_SEARCH_COLLECTION_NAME}",
-          "key": "YOUR_EXTERNAL_SEARCH_KEY"
-        }}
-      ]
-    }},
-    "stream": true
-  }}'"""
-    else:
-        curl_cmd = f"""curl --location '{SOLAR_SEARCH_URL}' \\
-  --header 'Authorization: Bearer YOUR_UPSTAGE_API_KEY' \\
-  --header 'Content-Type: application/json' \\
-  --data '{{
-    "model": "solar-pro2-search",
-    "messages": [
-      {{"role": "user", "content": "Your question here"}}
-    ],
-    "stream": true
-  }}'"""
+  --data '{json.dumps(curl_payload, indent=2)}'"""
     
     st.code(curl_cmd, language="bash")
     st.caption("💡 Copy this command for API testing")
