@@ -12,27 +12,41 @@ import time
 from dotenv import load_dotenv
 
 # Load environment variables from .env.test
-load_dotenv(".env.test")
+load_dotenv(".env")
 
 # Configuration
 SOLAR_SEARCH_URL = "https://solar-web-search.cosmic.upstage.ai/v1/chat/completions"
 UPSTAGE_API_KEY = os.getenv("UPSTAGE_API_KEY")
-EXTERNAL_SEARCH_BASE_URL = os.getenv("EXTERNAL_SEARCH_BASE_URL")
-EXTERNAL_SEARCH_COLLECTION_NAME = os.getenv("EXTERNAL_SEARCH_COLLECTION_NAME")
-EXTERNAL_SEARCH_API_KEY = os.getenv("EXTERNAL_SEARCH_API_KEY")
+EXTERNAL_SEARCH_URL = os.getenv("EXTERNAL_SEARCH_URL", "https://search_api.toy.x.upstage.ai/search/themilk")
 
 # Streamlit page config
 st.set_page_config(page_title="Solar Chat Test", page_icon="💬", layout="wide")
 
-# Header with title and new chat button
-col1, col2 = st.columns([6, 1])
-with col1:
-    st.title("💬 Solar Chat Test - Streaming")
-with col2:
-    st.write("")  # Spacing
-    if st.button("🔄 New Chat", use_container_width=True):
-        st.session_state.messages = []
-        st.rerun()
+# Custom CSS for professional look
+st.markdown("""
+<style>
+    .stButton button {
+        width: 100%;
+        border-radius: 5px;
+        height: 3em;
+    }
+    .stChatMessage {
+        padding: 1rem;
+        border-radius: 10px;
+        margin-bottom: 1rem;
+    }
+    h1 {
+        text-align: center;
+        color: #FF6B00; /* Solar Orange */
+        margin-bottom: 2rem;
+    }
+</style>
+""", unsafe_allow_html=True)
+
+# Header
+st.title("☀️ Solar Search")
+st.caption("Powered by Upstage Solar LLM & Custom Search")
+st.divider()
 
 # Check if API key is configured
 if not UPSTAGE_API_KEY:
@@ -81,14 +95,14 @@ if prompt := st.chat_input("What would you like to know?"):
         }
         
         # Add external search options if configured
-        if EXTERNAL_SEARCH_BASE_URL and EXTERNAL_SEARCH_COLLECTION_NAME and EXTERNAL_SEARCH_API_KEY:
+        if EXTERNAL_SEARCH_URL:
             data["web_search_options"] = {
                 "search_context_size": "medium",
                 "external_search_engine_only": True,
                 "servers": [
                     {
-                        "url": f"{EXTERNAL_SEARCH_BASE_URL.rstrip('/')}/search/{EXTERNAL_SEARCH_COLLECTION_NAME}",
-                        "key": EXTERNAL_SEARCH_API_KEY
+                        "url": EXTERNAL_SEARCH_URL,
+                        "key": UPSTAGE_API_KEY
                     }
                 ]
             }
@@ -167,6 +181,14 @@ if prompt := st.chat_input("What would you like to know?"):
 
 # Sidebar with configuration
 with st.sidebar:
+    st.title("💬 Options")
+    
+    if st.button("🔄 New Chat", type="primary", use_container_width=True):
+        st.session_state.messages = []
+        st.rerun()
+        
+    st.divider()
+
     st.header("⚙️ Configuration")
     
     # Developer Tools - cURL command
@@ -182,14 +204,14 @@ with st.sidebar:
         "stream": True
     }
 
-    if EXTERNAL_SEARCH_BASE_URL and EXTERNAL_SEARCH_COLLECTION_NAME and EXTERNAL_SEARCH_API_KEY:
+    if EXTERNAL_SEARCH_URL:
         curl_payload["web_search_options"] = {
             "search_context_size": "medium",
             "external_search_engine_only": True,
             "servers": [
                 {
-                    "url": f"{EXTERNAL_SEARCH_BASE_URL.rstrip('/')}/search/{EXTERNAL_SEARCH_COLLECTION_NAME}",
-                    "key": "YOUR_EXTERNAL_SEARCH_KEY"
+                    "url": EXTERNAL_SEARCH_URL,
+                    "key": UPSTAGE_API_KEY
                 }
             ]
         }
@@ -216,10 +238,9 @@ with st.sidebar:
     
     # External Search Configuration
     st.subheader("🔍 Search Settings")
-    if EXTERNAL_SEARCH_BASE_URL and EXTERNAL_SEARCH_COLLECTION_NAME and EXTERNAL_SEARCH_API_KEY:
+    if EXTERNAL_SEARCH_URL:
         st.success("**External Search:** ✓ Enabled")
         with st.expander("External Search Details"):
-            st.write(f"**Collection:** {EXTERNAL_SEARCH_COLLECTION_NAME}")
             st.write(f"**Mode:** External only (skips Perplexity)")
             st.write(f"**Context Size:** medium")
     else:
@@ -228,9 +249,7 @@ with st.sidebar:
     
     # Actions
     st.divider()
-    if st.button("🗑️ Clear Chat History", use_container_width=True):
-        st.session_state.messages = []
-        st.rerun()
+
     
     # Status
     st.divider()

@@ -13,8 +13,7 @@ A simple Streamlit chat interface for the Solar LLM API with streaming support a
     Edit `.env.test` and add your API keys:
     ```ini
     UPSTAGE_API_KEY=your_upstage_api_key_here
-    EXTERNAL_SEARCH_BASE_URL=https://your-search-api-url.com
-    EXTERNAL_SEARCH_COLLECTION_NAME=your_collection_name
+    EXTERNAL_SEARCH_URL=https://your-search-api-url.com/search/your_collection_name
     EXTERNAL_SEARCH_API_KEY=your_external_search_api_key
     ```
 
